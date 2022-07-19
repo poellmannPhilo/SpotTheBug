@@ -26,12 +26,12 @@
   },
   {
     "id": 5,
-    "solution": ["10"],
+    "solution": "10",
     "options": ["0", "Reference Error: i is not defined", "undefined"]
   },
   {
     "id": 6,
-    "solution": ["window"],
+    "solution": "window",
     "options": ["Reference Error", "this", "undefined"]
   }
 ]

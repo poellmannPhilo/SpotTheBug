@@ -42,7 +42,6 @@ export default function Choices({
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
   const onChoiceSelected = (_selectedAnswer: string) => {
-    console.log("choice selected");
     if (_selectedAnswer == selectedAnswer) {
       setSelectedAnswer(null);
     } else {

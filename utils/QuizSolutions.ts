@@ -22,5 +22,5 @@ export default class QuizSolutions {
     }
   };
 
-  static shuffle = (arr) => arr.sort(() => 0.5 - Math.random());
+  static shuffle = (arr: Array<any>) => arr.sort(() => 0.5 - Math.random());
 }
