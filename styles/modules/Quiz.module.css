@@ -1,0 +1,55 @@
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.imageContainer {
+  border-radius: 1em;
+}
+
+.choicesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 1em;
+  row-gap: 1em;
+  width: 100%;
+  margin: 1em;
+}
+
+.submitButtonContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.progressBarContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressBarBubble {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  background-color: grey;
+  margin: 1em;
+}
+
+.progressBarBubbleCorrect {
+  background-color: green;
+}
+
+.progressBarBubbleIncorrect {
+  background-color: red;
+}

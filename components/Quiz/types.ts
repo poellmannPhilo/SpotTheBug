@@ -1,0 +1,5 @@
+export enum EEntryType {
+  UNANSWERED = "UNANSWERED",
+  CORRECT = "CORRECT",
+  INCORRECT = "INCORRECT",
+}

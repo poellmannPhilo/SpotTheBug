@@ -2,8 +2,9 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: #ededed;
 }
 
 a {
@@ -13,4 +14,44 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+h1 {
+  font-weight: lighter;
+}
+
+h3 {
+  font-weight: normal;
+  font-size: 15px;
+}
+
+button {
+  min-height: 3em;
+  min-width: 5em;
+  border-radius: 1em;
+  border: 1px solid gray;
+}
+
+button:disabled{
+  opacity: 0.4;
+}
+
+footer {
+  font-size: 12px;
+}
+.multipleChoice {
+  background-color: #c3da8c;
+  border: none;
+}
+
+.multipleChoiceSelected {
+  background-color: #b0bb95;
+}
+
+.submitChoicesButton {
+  background-color: white;
+}
+.code {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
 }

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 0,
+    "solution": "0",
+    "options": ["undefined", "5", "15"]
+  },
+  {
+    "id": 1,
+    "solution": "true",
+    "options": ["false", "undefined", "null"]
+  },
+  {
+    "id": 2,
+    "solution": "arbadaK arbA",
+    "options": ["Abra Kadabra", "Kadabra Abra", "null"]
+  },
+  {
+    "id": 3,
+    "solution": "undefined",
+    "options": ["<empty string>", "function log()", "console.log()"]
+  },
+  {
+    "id": 4,
+    "solution": "11110",
+    "options": ["22", "1210", "121"]
+  },
+  {
+    "id": 5,
+    "solution": ["10"],
+    "options": ["0", "Reference Error: i is not defined", "undefined"]
+  },
+  {
+    "id": 6,
+    "solution": ["window"],
+    "options": ["Reference Error", "this", "undefined"]
+  }
+]
