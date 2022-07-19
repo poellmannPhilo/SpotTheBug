@@ -10,22 +10,23 @@ export default function quizHandler(req: NextApiRequest, res: NextApiResponse) {
     body,
   } = req;
 
+  const index = Number(id);
+
   switch (method) {
     case "GET":
-      // Get data from your database
       let fileReader = new FileReader();
-      fileReader.filepath = `resources/quiz/quiz_${id}.ts`;
+      fileReader.filepath = `resources/quiz/quiz_${index}.txt`;
       const code = fileReader.syncReadFile();
-      const options = QuizSolutions.getOptions(id);
+      const options = QuizSolutions.getOptions(index);
       res.status(200).json({ id, code: code, options });
       break;
+
     case "POST":
-      const correctAnswer = QuizSolutions.getSolution(id);
+      const correctAnswer = QuizSolutions.getSolution(index);
       const givenAnswer = body.answer;
-      console.log(correctAnswer);
-      console.log(givenAnswer);
       res.status(200).json({ correct: correctAnswer == givenAnswer });
       break;
+
     default:
       res.setHeader("Allow", ["GET"]);
       res.status(405).end(`Method ${method} Not Allowed`);
