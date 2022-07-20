@@ -1,10 +1,21 @@
-import type { NextPage } from "next";
+import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Quiz from "../components/Quiz/quiz";
 import styles from "../styles/Home.module.css";
+import prisma from "../lib/prisma";
+import LoginButton from "../components/Auth/loginButton";
 
-const Home: NextPage = () => {
+export const getStaticProps: GetStaticProps = async () => {
+  console.log('Try to retrieve user');
+  let user = await prisma.user.findFirst();
+  user = JSON.parse(JSON.stringify(user));
+  return {
+    props: {user },
+    revalidate: 10,
+  };
+};
+const Home: NextPage = ({  }) => {
   return (
     <div className={styles.container}>
       <Head>
@@ -14,6 +25,7 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}>
+        <LoginButton></LoginButton>
         <h1 className={styles.title}>Spot The Bug</h1>
         <h3>Javascript - Simple questions, surprising answers</h3>
         <Quiz />
