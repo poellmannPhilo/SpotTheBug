@@ -1,0 +1,17 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.userAvatarContainer {
+  background-color: orange;
+  height: 2em;
+  width: 2em;
+  border-radius: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid grey;
+}
