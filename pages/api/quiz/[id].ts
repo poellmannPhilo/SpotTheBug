@@ -15,7 +15,7 @@ export default function quizHandler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case "GET":
       let fileReader = new FileReader();
-      fileReader.filepath = `resources/quiz/quiz_${index}.txt`;
+      fileReader.filepath = `/quiz/quiz_${index}.txt`;
       const code = fileReader.syncReadFile();
       const options = QuizSolutions.getOptions(index);
       res.status(200).json({ id, code: code, options });

@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+import path from 'path';
 
 export default class FileReader {
   _filepath: string;
@@ -9,7 +10,8 @@ export default class FileReader {
 
   public syncReadFile() {
     try {
-      const contents = readFileSync(this._filepath, "utf-8");
+      const dir = path.join(process.cwd(), 'resources');
+      const contents = readFileSync(dir + this._filepath, "utf-8");
       return contents;
     } catch (err) {
       console.warn(err);
