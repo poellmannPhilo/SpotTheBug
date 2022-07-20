@@ -11,7 +11,7 @@ export default function CodeHighlighter({ code }: CodeHighligtherProps) {
       customStyle={{ borderRadius: "2em", fontSize: "12px" }}
       showLineNumbers
     >
-      {code}
+      {code.replaceAll(";  ", ";\n\n").replaceAll("; ", ";\n")}
     </SyntaxHighlighter>
   );
 }

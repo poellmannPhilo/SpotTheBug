@@ -2,6 +2,7 @@ import { useState } from "react";
 import styles from "../../styles/modules/Quiz.module.css";
 import classNames from "classnames";
 import { EEntryType } from "./types";
+import { QuizOption } from "@prisma/client";
 
 interface ChoiceProps {
   text: string;
@@ -11,7 +12,7 @@ interface ChoiceProps {
 }
 
 interface ChoicesProps {
-  texts: Array<string>;
+  options: Array<QuizOption>;
   onPrevious: () => void;
   onNext: (answer: string | null) => void;
   currentQuizIndex: number;
@@ -33,7 +34,7 @@ export function Choice({ text, onClick, isSelected, isDisabled }: ChoiceProps) {
 }
 
 export default function Choices({
-  texts,
+  options,
   onNext,
   onPrevious,
   currentQuizIndex,
@@ -52,13 +53,13 @@ export default function Choices({
   return (
     <div className={styles.choicesContainer}>
       <div className={styles.choiceGrid}>
-        {texts.map((text: string, i: number) => {
+        {options.map((option: QuizOption, i: number) => {
           return (
             <Choice
-              key={text}
-              text={text}
-              onClick={() => onChoiceSelected(text)}
-              isSelected={selectedAnswer === text}
+              key={option.id}
+              text={option.title}
+              onClick={() => onChoiceSelected(option.title)}
+              isSelected={selectedAnswer === option.title}
               isDisabled={currentQuizEntry !== EEntryType.UNANSWERED}
             ></Choice>
           );

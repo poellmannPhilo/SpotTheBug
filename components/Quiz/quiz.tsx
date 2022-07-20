@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import ProgressBar from "./progressBar";
 import { EEntryType } from "./types";
 import Results from "../Results/results";
+import { QuizOption } from "@prisma/client";
 
 const numQuizes = 7;
 export default function Quiz() {
   const [id, setId] = useState<number>(0);
   const [code, setCode] = useState<string | null>(null);
-  const [options, setOptions] = useState<Array<string>>([]);
+  const [options, setOptions] = useState<Array<QuizOption>>([]);
   const [entries, setEntries] = useState<Array<EEntryType>>(
     new Array(numQuizes).fill(EEntryType.UNANSWERED)
   );
@@ -27,10 +28,14 @@ export default function Quiz() {
         throw new Error(`Error: ${response.status}`);
       }
       const solution = await response.json();
+      console.log(solution);
+      console.log(solution.options);
       setCode(solution.code);
       setOptions(solution.options);
     };
-    fetchQuiz();
+    if (id != numQuizes) {
+      fetchQuiz();
+    }
   }, [id]);
 
   const checkAnswer = async (answer: string) => {
@@ -90,7 +95,7 @@ export default function Quiz() {
           <ProgressBar entries={entries}></ProgressBar>
           <CodeHighlighter code={code ? code : ""}></CodeHighlighter>
           <Choices
-            texts={options}
+            options={options}
             onNext={(answer: string | null) => goToNextQuiz(answer)}
             onPrevious={goToPreviousQuiz}
             currentQuizIndex={id}

@@ -2,8 +2,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import FileReader from "../../../utils/FileReader";
 import solutions from "../../../resources/quiz/solutions.json";
 import QuizSolutions from "../../../utils/QuizSolutions";
+import prisma from "../../../lib/prisma";
+import { Quiz } from "@prisma/client";
 
-export default function quizHandler(req: NextApiRequest, res: NextApiResponse) {
+export default async function quizHandler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const {
     query: { id },
     method,
@@ -14,11 +19,26 @@ export default function quizHandler(req: NextApiRequest, res: NextApiResponse) {
 
   switch (method) {
     case "GET":
-      let fileReader = new FileReader();
-      fileReader.filepath = `/quiz/quiz_${index}.txt`;
-      const code = fileReader.syncReadFile();
-      const options = QuizSolutions.getOptions(index);
-      res.status(200).json({ id, code: code, options });
+      const quiz = await prisma.quiz.findUnique({
+        where:{
+          internalId: Number(id),
+        },
+        select: {
+          id: true,
+          code: true,
+          options: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+      if (!quiz) {
+        res.status(500).json({ message: "Something went wrong" });
+      } else {
+        res.status(200).json({ id, code: quiz.code, options: quiz.options });
+      }
       break;
 
     case "POST":
