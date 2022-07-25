@@ -3,22 +3,24 @@ import Choices from "./choices";
 import CodeHighlighter from "./codeHighliter";
 import { useEffect, useState } from "react";
 import ProgressBar from "./progressBar";
-import { EEntryType } from "./types";
+import { EQuizState, IQuizResultEntry, IQuizResultEntriesDTO } from "./types";
 import Results from "../Results/results";
-import { QuizOption } from "@prisma/client";
+import { QuizOption, QuizResultEntry } from "@prisma/client";
 
-const numQuizes = 7;
 export default function Quiz() {
-  const [id, setId] = useState<number>(0);
-  const [code, setCode] = useState<string | null>(null);
-  const [options, setOptions] = useState<Array<QuizOption>>([]);
-  const [entries, setEntries] = useState<Array<EEntryType>>(
-    new Array(numQuizes).fill(EEntryType.UNANSWERED)
+  const [step, setStep] = useState<number>(0);
+  const [quizes, setQuizes] = useState<Array<any>>([]);
+  const [quizState, setQuizState] = useState<EQuizState>(EQuizState.LOADING);
+  const [quizResultEntries, setQuizResultEntries] = useState<
+    Array<IQuizResultEntry>
+  >([]);
+  const [quizEntryTimeStamp, setQuizEntryTimestamp] = useState<Date>(
+    new Date()
   );
 
   useEffect(() => {
-    const fetchQuiz = async () => {
-      const response = await fetch(`/api/quiz/${id}`, {
+    const fetchQuizes = async () => {
+      const response = await fetch("/api/quiz", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -27,85 +29,95 @@ export default function Quiz() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      const solution = await response.json();
-      console.log(solution);
-      console.log(solution.options);
-      setCode(solution.code);
-      setOptions(solution.options);
+      const _quizes = await response.json();
+      setQuizes(_quizes);
+      setQuizState(EQuizState.QUIZING);
     };
-    if (id != numQuizes) {
-      fetchQuiz();
-    }
-  }, [id]);
+    fetchQuizes();
+  }, []);
 
-  const checkAnswer = async (answer: string) => {
-    const response = await fetch(`/api/quiz/${id}`, {
+  const checkAnswer = async (option: QuizOption): Promise<boolean> => {
+    const response = await fetch(`/api/quiz/${quizes[step].id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ answer }),
+      body: JSON.stringify({ answer: option.id }),
     });
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }
     const result = await response.json();
-    if (result.correct) {
-      setQuizEntry(EEntryType.CORRECT);
+    return result.correct;
+  };
+
+  const goToNextQuiz = async (option: QuizOption | null) => {
+    if (option) {
+      const isCorrect = await checkAnswer(option);
+      const quizResultEntry: IQuizResultEntry = {
+        quizId: quizes[step].id,
+        quizOptionId: option.id,
+        startTimestamp: quizEntryTimeStamp,
+        endTimestamp: new Date(),
+        isCorrect: isCorrect,
+      };
+      await setQuizResultEntries([...quizResultEntries, quizResultEntry]);
+    }
+    const nextQuizExists = step + 1 < quizes.length;
+    if (nextQuizExists) {
+      setStep(step + 1);
+      setQuizEntryTimestamp(new Date());
     } else {
-      setQuizEntry(EEntryType.INCORRECT);
+      submitQuiz();
+      setQuizState(EQuizState.RESULTS_SHOWN);
     }
   };
 
-  const setQuizEntry = (entryType: EEntryType) => {
-    const newState = entries.map((entry, i) => {
-      if (i == id) {
-        return entryType;
-      } else return entry;
+  const submitQuiz = async () => {
+    const body: IQuizResultEntriesDTO = {
+      quizResultEntries: quizResultEntries.map((quizResultEntry) => {
+        return {
+          quizId: quizResultEntry.quizId,
+          quizOptionId: quizResultEntry.quizOptionId,
+          startTimestamp: quizResultEntry.startTimestamp,
+          endTimestamp: quizResultEntry.endTimestamp,
+        };
+      }),
+    };
+    const response = await fetch("/api/quizResult", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
-    setEntries(newState);
-  };
-
-  const goToNextQuiz = (answer: string | null) => {
-    setId(id + 1);
-    if (answer) {
-      checkAnswer(answer);
-    }
-  };
-
-  const goToPreviousQuiz = () => {
-    setId(id - 1);
   };
 
   const resetQuiz = () => {
-    setId(0);
-    setCode(null);
-    setOptions([]);
-    setEntries(new Array(numQuizes).fill(EEntryType.UNANSWERED));
-  };
-
-  const numCorrectAnswers = () => {
-    return entries.filter((entry) => entry == EEntryType.CORRECT).length;
+    setStep(0);
+    setQuizState(EQuizState.QUIZING);
+    setQuizResultEntries([]);
   };
 
   return (
     <div className={styles.container}>
-      {id < numQuizes && (
+      {quizState == EQuizState.QUIZING && (
         <>
-          <ProgressBar entries={entries}></ProgressBar>
-          <CodeHighlighter code={code ? code : ""}></CodeHighlighter>
+          <ProgressBar
+            entries={quizResultEntries}
+            numQuestions={quizes.length}
+          ></ProgressBar>
+          <CodeHighlighter code={quizes[step].code}></CodeHighlighter>
           <Choices
-            options={options}
-            onNext={(answer: string | null) => goToNextQuiz(answer)}
-            onPrevious={goToPreviousQuiz}
-            currentQuizIndex={id}
-            currentQuizEntry={entries[id]}
+            options={quizes[step].options}
+            onNext={(option: QuizOption | null) => goToNextQuiz(option)}
+            currentQuizIndex={step}
           ></Choices>
         </>
       )}
-      {id == numQuizes && (
+      {quizState == EQuizState.RESULTS_SHOWN && (
         <Results
-          numCorrectAnswers={numCorrectAnswers()}
+          numCorrectAnswers={20}
           numQuizes={7}
           onTryAgain={resetQuiz}
         ></Results>

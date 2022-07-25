@@ -1,6 +1,6 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL") // Only needed when using a cloud provider that doesn't support the creation of new databases, like Heroku. Learn more: https://pris.ly/migrate-shadow
 }
 
@@ -10,18 +10,18 @@ generator client {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String   @map("user_id")
-  type               String
-  provider           String
-  providerAccountId  String   @map("provider_account_id")
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -40,13 +40,14 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
+  email         String?      @unique
+  emailVerified DateTime?    @map("email_verified")
   image         String?
   accounts      Account[]
   sessions      Session[]
+  QuizResult    QuizResult[]
 
   @@map("users")
 }
@@ -61,20 +62,44 @@ model VerificationToken {
 }
 
 model Quiz {
-  id String @id @default(cuid())
-  code String
-  internalId Int @unique @map("internal_id")
-  options QuizOption[] @relation("QuizOptions")
+  id                String            @id @default(cuid())
+  code              String
+  internalId        Int               @unique @map("internal_id")
+  options           QuizOption[]      @relation("QuizOptions")
+  quizResultEntries QuizResultEntry[]
 
   @@map("quizes")
 }
 
 model QuizOption {
-    id String @id @default(cuid())
-    title String
-    isCorrect Boolean
-    quiz Quiz @relation("QuizOptions", fields:[quizId], references: [id])
-    quizId String
+  id              String            @id @default(cuid())
+  title           String
+  isCorrect       Boolean
+  quiz            Quiz              @relation("QuizOptions", fields: [quizId], references: [id])
+  quizId          String
+  QuizResultEntry QuizResultEntry[]
 
-    @@map("quizoptions")
+  @@map("quizoptions")
+}
+
+model QuizResultEntry {
+  id         String     @id @default(uuid())
+  quiz       Quiz       @relation(fields: [quizId], references: [id])
+  quizId     String
+  quizOption QuizOption @relation(fields: [quizOptionId], references: [id])
+
+  quizOptionId String
+  QuizResult   QuizResult? @relation(fields: [quizResultId], references: [id])
+  quizResultId String?
+
+  startTimestamp DateTime @map("start_timestamp")
+  endTimestamp   DateTime @map("end_timestamp")
+}
+
+model QuizResult {
+  id                String            @id @default(uuid())
+  createdAt         DateTime          @default(now())
+  quizResultEntries QuizResultEntry[]
+  User              User              @relation(fields: [userId], references: [id])
+  userId            String
 }

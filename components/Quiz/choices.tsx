@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styles from "../../styles/modules/Quiz.module.css";
 import classNames from "classnames";
-import { EEntryType } from "./types";
 import { QuizOption } from "@prisma/client";
 
 interface ChoiceProps {
@@ -13,10 +12,8 @@ interface ChoiceProps {
 
 interface ChoicesProps {
   options: Array<QuizOption>;
-  onPrevious: () => void;
-  onNext: (answer: string | null) => void;
+  onNext: (option: QuizOption | null) => void;
   currentQuizIndex: number;
-  currentQuizEntry: EEntryType;
 }
 
 export function Choice({ text, onClick, isSelected, isDisabled }: ChoiceProps) {
@@ -36,17 +33,18 @@ export function Choice({ text, onClick, isSelected, isDisabled }: ChoiceProps) {
 export default function Choices({
   options,
   onNext,
-  onPrevious,
+  //onPrevious,
   currentQuizIndex,
-  currentQuizEntry,
 }: ChoicesProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<QuizOption | null>(null);
 
-  const onChoiceSelected = (_selectedAnswer: string) => {
-    if (_selectedAnswer == selectedAnswer) {
-      setSelectedAnswer(null);
+  const onChoiceSelected = (_selectedOption: QuizOption) => {
+    if (selectedOption == null) {
+      setSelectedOption(_selectedOption);
     } else {
-      setSelectedAnswer(_selectedAnswer);
+      _selectedOption.id == selectedOption.id
+        ? setSelectedOption(null)
+        : setSelectedOption(_selectedOption);
     }
   };
 
@@ -58,9 +56,9 @@ export default function Choices({
             <Choice
               key={option.id}
               text={option.title}
-              onClick={() => onChoiceSelected(option.title)}
-              isSelected={selectedAnswer === option.title}
-              isDisabled={currentQuizEntry !== EEntryType.UNANSWERED}
+              onClick={() => onChoiceSelected(option)}
+              isSelected={selectedOption?.id === option.id}
+              isDisabled={false}
             ></Choice>
           );
         })}
@@ -69,22 +67,10 @@ export default function Choices({
         <button
           className={styles.submitChoicesButton}
           onClick={() => {
-            onPrevious();
-            setSelectedAnswer(null);
+            onNext(selectedOption);
+            setSelectedOption(null);
           }}
-          disabled={currentQuizIndex == 0}
-        >
-          Previous
-        </button>
-        <button
-          className={styles.submitChoicesButton}
-          onClick={() => {
-            onNext(selectedAnswer);
-            setSelectedAnswer(null);
-          }}
-          disabled={
-            selectedAnswer == null && currentQuizEntry == EEntryType.UNANSWERED
-          }
+          disabled={selectedOption == null}
         >
           Next
         </button>

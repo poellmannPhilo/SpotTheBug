@@ -6,15 +6,6 @@ import styles from "../styles/Home.module.css";
 import prisma from "../lib/prisma";
 import TopMenu from "../components/Menu/TopMenu";
 
-export const getStaticProps: GetStaticProps = async () => {
-  console.log("Try to retrieve user");
-  let user = await prisma.user.findFirst();
-  user = JSON.parse(JSON.stringify(user));
-  return {
-    props: { user },
-    revalidate: 10,
-  };
-};
 const Home: NextPage = ({}) => {
   return (
     <div className={styles.container}>
