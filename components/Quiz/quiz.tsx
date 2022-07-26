@@ -30,11 +30,18 @@ export default function Quiz() {
         throw new Error(`Error: ${response.status}`);
       }
       const _quizes = await response.json();
+      console.log(_quizes);
       setQuizes(_quizes);
       setQuizState(EQuizState.QUIZING);
     };
     fetchQuizes();
   }, []);
+
+  useEffect(() => {
+    if (quizResultEntries.length > 0) {
+      goToNextQuiz();
+    }
+  }, [quizResultEntries]);
 
   const checkAnswer = async (option: QuizOption): Promise<boolean> => {
     const response = await fetch(`/api/quiz/${quizes[step].id}`, {
@@ -51,7 +58,7 @@ export default function Quiz() {
     return result.correct;
   };
 
-  const goToNextQuiz = async (option: QuizOption | null) => {
+  const addQuizResultEntry = async (option: QuizOption | null) => {
     if (option) {
       const isCorrect = await checkAnswer(option);
       const quizResultEntry: IQuizResultEntry = {
@@ -61,8 +68,11 @@ export default function Quiz() {
         endTimestamp: new Date(),
         isCorrect: isCorrect,
       };
-      await setQuizResultEntries([...quizResultEntries, quizResultEntry]);
+      setQuizResultEntries([...quizResultEntries, quizResultEntry]);
     }
+  };
+
+  const goToNextQuiz = () => {
     const nextQuizExists = step + 1 < quizes.length;
     if (nextQuizExists) {
       setStep(step + 1);
@@ -74,6 +84,7 @@ export default function Quiz() {
   };
 
   const submitQuiz = async () => {
+    console.log(quizResultEntries);
     const body: IQuizResultEntriesDTO = {
       quizResultEntries: quizResultEntries.map((quizResultEntry) => {
         return {
@@ -84,11 +95,13 @@ export default function Quiz() {
         };
       }),
     };
+    console.log(JSON.stringify(body));
     const response = await fetch("/api/quizResult", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+
       body: JSON.stringify(body),
     });
   };
@@ -110,7 +123,9 @@ export default function Quiz() {
           <CodeHighlighter code={quizes[step].code}></CodeHighlighter>
           <Choices
             options={quizes[step].options}
-            onNext={(option: QuizOption | null) => goToNextQuiz(option)}
+            onNext={(option: QuizOption | null) => {
+              addQuizResultEntry(option);
+            }}
             currentQuizIndex={step}
           ></Choices>
         </>
