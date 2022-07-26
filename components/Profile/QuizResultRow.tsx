@@ -13,10 +13,11 @@ const QuizResultRow = ({ quizResult }: QuizResultRowProps) => {
     quizResult.numAnswers > 0
       ? (quizResult.numCorrectAnswers / quizResult.numAnswers) * 100
       : 0;
+  const numSeconds = (quizResult.timeSpent / 1000).toFixed(1) + " s";
   return (
     <div className={styles.quizResultRow}>
       <h3>{formatTimestamp(new Date(quizResult.timestamp))}</h3>
-      <h3>{quizResult.timeSpent / 1000 + ' s'}</h3>
+      <h3>{numSeconds}</h3>
       <div className={styles.circularProgressContainer}>
         <CircularProgressbar
           value={percentage}

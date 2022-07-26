@@ -1,5 +1,7 @@
 import { useSession } from "next-auth/react";
 import style from "../../styles/modules/Menu.module.css";
+import classNames from "classnames";
+import Link from "next/link";
 
 export default function UserAvatar() {
   const { data: session } = useSession();
@@ -7,9 +9,15 @@ export default function UserAvatar() {
 
   if (userName) {
     return (
-      <div className={style.userAvatarContainer}>
-        <div>{userName[0]}</div>
-      </div>
+      <Link href="/profile">
+        <div
+          className={classNames(style.userAvatarContainer, {
+            large: true,
+          })}
+        >
+          <div className={style.userAvatarText}>{userName[0]}</div>
+        </div>
+      </Link>
     );
   } else {
     return <div></div>;

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import UserAvatar from "../components/Menu/UserAvatar";
 import QuizResultRow from "../components/Profile/QuizResultRow";
 import { IQuizResultGetResponse, IQuizResult } from "./api/quizResult";
+import style from "../styles/Profile.module.css";
 
 const Profile: NextPage = () => {
   const [quizResults, setQuizResults] = useState<Array<IQuizResult>>([]);
@@ -21,8 +22,8 @@ const Profile: NextPage = () => {
     fetchQuizResults();
   }, []);
   return (
-    <div>
-      <UserAvatar></UserAvatar>
+    <>
+      <h1>Quiz Results</h1>
       {quizResults.map((quizResult: IQuizResult) => {
         return (
           <QuizResultRow
@@ -31,7 +32,7 @@ const Profile: NextPage = () => {
           ></QuizResultRow>
         );
       })}
-    </div>
+    </>
   );
 };
 
