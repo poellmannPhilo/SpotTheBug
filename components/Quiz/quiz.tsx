@@ -6,6 +6,7 @@ import ProgressBar from "./progressBar";
 import { EQuizState, IQuizResultEntry, IQuizResultEntriesDTO } from "./types";
 import Results from "../Results/results";
 import { QuizOption, QuizResultEntry } from "@prisma/client";
+import { IQuizResult } from "../../pages/api/quizResult";
 
 export default function Quiz() {
   const [step, setStep] = useState<number>(0);
@@ -17,6 +18,7 @@ export default function Quiz() {
   const [quizEntryTimeStamp, setQuizEntryTimestamp] = useState<Date>(
     new Date()
   );
+  const [quizResult, setQuizResult] = useState<IQuizResult | null>(null);
 
   useEffect(() => {
     const fetchQuizes = async () => {
@@ -30,7 +32,6 @@ export default function Quiz() {
         throw new Error(`Error: ${response.status}`);
       }
       const _quizes = await response.json();
-      console.log(_quizes);
       setQuizes(_quizes);
       setQuizState(EQuizState.QUIZING);
     };
@@ -79,37 +80,45 @@ export default function Quiz() {
       setQuizEntryTimestamp(new Date());
     } else {
       submitQuiz();
-      setQuizState(EQuizState.RESULTS_SHOWN);
     }
   };
 
   const submitQuiz = async () => {
-    console.log(quizResultEntries);
-    const body: IQuizResultEntriesDTO = {
-      quizResultEntries: quizResultEntries.map((quizResultEntry) => {
-        return {
-          quizId: quizResultEntry.quizId,
-          quizOptionId: quizResultEntry.quizOptionId,
-          startTimestamp: quizResultEntry.startTimestamp,
-          endTimestamp: quizResultEntry.endTimestamp,
-        };
-      }),
-    };
-    console.log(JSON.stringify(body));
-    const response = await fetch("/api/quizResult", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    try {
+      const body: IQuizResultEntriesDTO = {
+        quizResultEntries: quizResultEntries.map((quizResultEntry) => {
+          return {
+            quizId: quizResultEntry.quizId,
+            quizOptionId: quizResultEntry.quizOptionId,
+            startTimestamp: quizResultEntry.startTimestamp,
+            endTimestamp: quizResultEntry.endTimestamp,
+          };
+        }),
+      };
+      const response = await fetch("/api/quizResult", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      body: JSON.stringify(body),
-    });
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const quizResult: IQuizResult = await response.json();
+      setQuizResult(quizResult);
+      setQuizState(EQuizState.RESULTS_SHOWN);
+    } catch (error) {
+      console.warn(error);
+    }
   };
 
   const resetQuiz = () => {
     setStep(0);
     setQuizState(EQuizState.QUIZING);
     setQuizResultEntries([]);
+    setQuizResult(null);
   };
 
   return (
@@ -132,8 +141,10 @@ export default function Quiz() {
       )}
       {quizState == EQuizState.RESULTS_SHOWN && (
         <Results
-          numCorrectAnswers={20}
-          numQuizes={7}
+          numCorrectAnswers={
+            quizResult?.numCorrectAnswers ? quizResult.numCorrectAnswers : 0
+          }
+          numQuizes={quizResult?.numAnswers ? quizResult.numAnswers : 0}
           onTryAgain={resetQuiz}
         ></Results>
       )}

@@ -1,5 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { Quiz, QuizResult, QuizResultEntry } from "@prisma/client";
+import {
+  Prisma,
+  QuizResult,
+  QuizResultEntry,
+  QuizOption,
+} from "@prisma/client";
 import prisma from "../../lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../../pages/api/auth/[...nextauth]";
@@ -32,6 +37,64 @@ export type IQuizResult = {
   }[];
 };
 
+export type QuizResultExpanded = {
+  id: string;
+  createdAt: Date;
+  quizResultEntries: (QuizResultEntry & {
+    quiz: {
+      options: QuizOption[];
+      id: string;
+      code: string;
+    };
+    quizOption: {
+      id: string;
+      title: string;
+      isCorrect: boolean;
+    };
+  })[];
+};
+
+const generateQuizResult = (quizResult: QuizResultExpanded): IQuizResult => {
+  const _quizes = quizResult.quizResultEntries.map((quizResultEntry) => {
+    const _options = quizResultEntry.quiz.options.map((quizOption) => {
+      const _wasChosen: boolean = quizOption.id == quizResultEntry.quizOptionId;
+      return {
+        id: quizOption.id,
+        title: quizOption.title,
+        isCorrect: quizOption.isCorrect,
+        wasChosen: _wasChosen,
+      };
+    });
+    const timeSpentOnQuiz =
+      quizResultEntry.endTimestamp.getTime() -
+      quizResultEntry.startTimestamp.getTime();
+    return {
+      id: quizResultEntry.quiz.id,
+      code: quizResultEntry.quiz.code,
+      timeSpent: timeSpentOnQuiz,
+      options: _options,
+    };
+  });
+  const numCorrectAnswers = _quizes.filter(
+    (quiz) =>
+      quiz.options.filter(
+        (quizOption) => quizOption.isCorrect && quizOption.wasChosen
+      ).length != 0
+  ).length;
+  const timeSpentTotal = _quizes.reduce(
+    (partialSum, quiz) => partialSum + quiz.timeSpent,
+    0
+  );
+  return {
+    id: quizResult.id,
+    numAnswers: quizResult.quizResultEntries.length,
+    numCorrectAnswers: numCorrectAnswers,
+    timeSpent: timeSpentTotal,
+    timestamp: quizResult.createdAt.toString(),
+    quizes: _quizes,
+  };
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -45,6 +108,7 @@ export default async function handler(
     res.status(401).json({ message: "You must be logged in." });
     return;
   }
+
   switch (method) {
     case "GET": {
       const quizResults = await prisma.quizResult.findMany({
@@ -79,47 +143,9 @@ export default async function handler(
           createdAt: "desc",
         },
       });
-      const _quizResults = quizResults.map((quizResult) => {
-        const _quizes = quizResult.quizResultEntries.map((quizResultEntry) => {
-          const _options = quizResultEntry.quiz.options.map((quizOption) => {
-            const _wasChosen: boolean =
-              quizOption.id == quizResultEntry.quizOptionId;
-            return {
-              id: quizOption.id,
-              title: quizOption.title,
-              isCorrect: quizOption.isCorrect,
-              wasChosen: _wasChosen,
-            };
-          });
-          const timeSpentOnQuiz =
-            quizResultEntry.endTimestamp.getTime() -
-            quizResultEntry.startTimestamp.getTime();
-          return {
-            id: quizResultEntry.quiz.id,
-            code: quizResultEntry.quiz.code,
-            timeSpent: timeSpentOnQuiz,
-            options: _options,
-          };
-        });
-        const numCorrectAnswers = _quizes.filter(
-          (quiz) =>
-            quiz.options.filter(
-              (quizOption) => quizOption.isCorrect && quizOption.wasChosen
-            ).length != 0
-        ).length;
-        const timeSpentTotal = _quizes.reduce(
-          (partialSum, quiz) => partialSum + quiz.timeSpent,
-          0
-        );
-        return {
-          id: quizResult.id,
-          numAnswers: quizResult.quizResultEntries.length,
-          numCorrectAnswers: numCorrectAnswers,
-          timeSpent: timeSpentTotal,
-          timestamp: quizResult.createdAt.toString(),
-          quizes: _quizes,
-        };
-      });
+      const _quizResults = quizResults.map((quizResult) =>
+        generateQuizResult(quizResult)
+      );
       const response: IQuizResultGetResponse = {
         quizResults: _quizResults.filter(
           (quizResult) => quizResult.numAnswers == 7
@@ -145,11 +171,33 @@ export default async function handler(
             },
           },
         },
+        select: {
+          id: true,
+          createdAt: true,
+          quizResultEntries: {
+            include: {
+              quiz: {
+                select: {
+                  id: true,
+                  code: true,
+                  options: true,
+                },
+              },
+              quizOption: {
+                select: {
+                  id: true,
+                  title: true,
+                  isCorrect: true,
+                },
+              },
+            },
+          },
+        },
       });
-      if (!quizResult) {
+      if (quizResult) {
         res.status(500).json({ message: "Something went wrong" });
       } else {
-        res.status(200).json(quizResult);
+        res.status(200).json(generateQuizResult(quizResult));
       }
     }
   }
