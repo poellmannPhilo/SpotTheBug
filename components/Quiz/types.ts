@@ -11,14 +11,3 @@ export interface IQuizResultEntry {
   endTimestamp: Date;
   isCorrect: boolean;
 }
-
-export interface IQuizResultEntriesDTO {
-  quizResultEntries: [
-    {
-      quizId: string;
-      quizOptionId: string;
-      startTimestamp: Date;
-      endTimestamp: Date;
-    }
-  ];
-}

@@ -7,6 +7,7 @@ import { EQuizState, IQuizResultEntry, IQuizResultEntriesDTO } from "./types";
 import Results from "../Results/results";
 import { QuizOption, QuizResultEntry } from "@prisma/client";
 import { IQuizResult } from "../../pages/api/quizResult";
+import { QuizResultService, QuizService } from "../../utils/HTTPService";
 
 export default function Quiz() {
   const [step, setStep] = useState<number>(0);
@@ -22,16 +23,8 @@ export default function Quiz() {
 
   useEffect(() => {
     const fetchQuizes = async () => {
-      const response = await fetch("/api/quiz", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const _quizes = await response.json();
+      const quizService = new QuizService();
+      const _quizes = await quizService.getFullQuiz();
       setQuizes(_quizes);
       setQuizState(EQuizState.QUIZING);
     };
@@ -45,18 +38,14 @@ export default function Quiz() {
   }, [quizResultEntries]);
 
   const checkAnswer = async (option: QuizOption): Promise<boolean> => {
-    const response = await fetch(`/api/quiz/${quizes[step].id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ answer: option.id }),
-    });
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+    try {
+      const quizService = new QuizService();
+      const isCorrect = quizService.checkAnswer(quizes[step].id, option);
+      return isCorrect;
+    } catch (error) {
+      alert("something went wrong");
+      return false;
     }
-    const result = await response.json();
-    return result.correct;
   };
 
   const addQuizResultEntry = async (option: QuizOption | null) => {
@@ -84,34 +73,12 @@ export default function Quiz() {
   };
 
   const submitQuiz = async () => {
-    try {
-      const body: IQuizResultEntriesDTO = {
-        quizResultEntries: quizResultEntries.map((quizResultEntry) => {
-          return {
-            quizId: quizResultEntry.quizId,
-            quizOptionId: quizResultEntry.quizOptionId,
-            startTimestamp: quizResultEntry.startTimestamp,
-            endTimestamp: quizResultEntry.endTimestamp,
-          };
-        }),
-      };
-      const response = await fetch("/api/quizResult", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const quizResult: IQuizResult = await response.json();
-      setQuizResult(quizResult);
-      setQuizState(EQuizState.RESULTS_SHOWN);
-    } catch (error) {
-      console.warn(error);
-    }
+    const quizResultService = new QuizResultService();
+    const quizResult = await quizResultService.generateQuizResult(
+      quizResultEntries
+    );
+    setQuizResult(quizResult);
+    setQuizState(EQuizState.RESULTS_SHOWN);
   };
 
   const resetQuiz = () => {
